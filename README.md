@@ -23,7 +23,7 @@ This project aims to solve both issues, while being easy to use and install
 ```shell
 git clone git@github.com:rl-frolov/wsl2-ssh-agent.git
 cd wsl2-ssh-agent
-ln -s /mnt/c/Users/<Your windows username here> ~/winhome
+ln -s $(powershell.exe -Command "cd \$env:USERPROFILE; wsl --exec pwd") ~/winhome
 mkdir -p ~/winhome/.wsl
 cp npiperelay.exe ~/winhome/.wsl/
 mkdir -p ~/.local/bin
