@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+AGENT_BASE="${XDG_RUNTIME_DIR%/}"
+AGENT_SOCKET="$AGENT_BASE/agent.sock"
+NPIPERELAY_BIN="${HOME}/winhome/.wsl/npiperelay.exe"   # adjust as needed
+
+check_prerequisites() {
+    if ! command -v socat &>/dev/null; then
+        echo "ERROR: socat not found. Install with: sudo apt install socat" >&2
+        return 1
+    fi
+    if [[ ! -x "$NPIPERELAY_BIN" ]]; then
+        echo "ERROR: npiperelay.exe not executable at: $NPIPERELAY_BIN" >&2
+        echo "Download from: https://github.com/jstarks/npiperelay/releases" >&2
+        return 1
+    fi
+    return 0
+}
+
+case "${1:-foreground}" in
+    foreground)
+        check_prerequisites || exit 1
+        if [[ -S "$AGENT_SOCKET" ]]; then
+            echo "ERROR: Socket already exists at $AGENT_SOCKET. Another instance may be running." >&2
+            exit 1
+        fi
+
+        socat_cmd="socat"
+        [[ -v SOCAT_VERBOSE ]] && socat_cmd="socat -d -d"
+
+        exec $socat_cmd UNIX-LISTEN:"$AGENT_SOCKET",fork \
+            EXEC:"$NPIPERELAY_BIN -ei -s //./pipe/openssh-ssh-agent"
+        ;;
+    debug)
+        export SOCAT_VERBOSE=1
+        exec "$0" foreground
+        ;;
+    print-env)
+        echo "export SSH_AUTH_SOCK=\"$AGENT_SOCKET\""
+        ;;
+    --version|-v)
+        echo "wsl-ssh-agent 1.0.0"
+        ;;
+    --help|-h)
+        cat <<EOF
+Usage: $0 {foreground|debug|print-env} [--version] [--help]
+
+  foreground   (default) Run the SSH agent relay (for systemd or manual use).
+  debug        Run the relay with full socat debug output.
+  print-env    Print the SSH_AUTH_SOCK export line.
+  -v --version    Show version.
+  -h --help       Show this help.
+EOF
+        ;;
+    *)
+        echo "Unknown command: $1" >&2
+        exit 1
+        ;;
+esac
