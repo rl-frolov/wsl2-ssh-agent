@@ -83,7 +83,7 @@ case "${1:-usage}" in
         ;;
     no-autorun)
         check_installed
-        exec systemctl --user enable wsl-ssh-agent.service
+        exec systemctl --user disable wsl-ssh-agent.service
         ;;
     reload)
         check_installed
