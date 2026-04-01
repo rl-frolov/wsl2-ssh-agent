@@ -96,7 +96,7 @@ case "${1:-usage}" in
         ;;
 # INFO
     --version|-v)
-        echo "wsl-ssh-agent 1.0.0"
+        echo "wsl-ssh-agent 1.1.0"
         ;;
 
     --help|-h)
