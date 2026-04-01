@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Try to load persistent config first, then fallback to repo config
 CONFIG_FILE="$HOME/.config/wsl-ssh-agent/config.sh"
-[[ ! -f "$CONFIG_FILE" ]] && CONFIG_FILE="$(dirname "${BASH_SOURCE[0]}")/config.sh"
+[[ ! -f "$CONFIG_FILE" ]] && CONFIG_FILE="$(dirname -- $0)/config.sh"
 if [[ ! -f "$CONFIG_FILE" ]]; then
     echo "ERROR: Could not find configuration file." >&2
     exit 1
@@ -14,7 +14,7 @@ source "$CONFIG_FILE"
 echo -e "${YELLOW}[WARN]${NC} This will remove wsl-ssh-agent and its configuration."
 read -p "Are you sure? (y/N) " -r
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Uninstall cancelled."
+    echo "Uninstallation cancelled."
     exit 0
 fi
 
