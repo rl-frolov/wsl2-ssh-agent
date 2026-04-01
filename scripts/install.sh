@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_DIR="$(dirname $(dirname ${BASH_SOURCE[0]}))"
+REPO_DIR="$(dirname -- $(dirname -- $0))"
 CONFIG_FILE="$REPO_DIR/scripts/config.sh"
 source "$CONFIG_FILE"
 
-UNATTENDED=false
-[[ "${1:-}" == "--unattended" ]] && UNATTENDED=true
+echo -e "${YELLOW}[WARN]${NC} This will install wsl-ssh-agent and its configuration."
+read -p "Are you sure? (y/N) " -r
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo "Installation cancelled."
+    exit 0
+fi
 
 SCRIPT_SRC="$REPO_DIR/service/wsl-ssh-agent"
 SERVICE_SRC="$REPO_DIR/service/wsl-ssh-agent.service"
@@ -46,22 +50,18 @@ fi
 eval "\$( $SCRIPT_DEST print-env )"
 $GUARD_END
 EOF
-    if ! $UNATTENDED; then
-        log_info "Added. Restart your shell or run 'source ~/.bashrc'."
-    fi
+    log_info "Added. Restart your shell or run 'source ~/.bashrc'."
 fi
 
-if ! $UNATTENDED; then
-    SOCKET=$("$SCRIPT_DEST" print-env 2>/dev/null | cut -d'=' -f2- | tr -d '"')
-    if [[ -S "$SOCKET" ]]; then
-        if SSH_AUTH_SOCK="$SOCKET" ssh-add -l &>/dev/null; then
-            log_info "Agent is working! Keys are available."
-        else
-            log_warn "Socket exists but no keys found (or agent not ready)."
-        fi
+SOCKET=$("$SCRIPT_DEST" print-env 2>/dev/null | cut -d'=' -f2- | tr -d '"')
+if [[ -S "$SOCKET" ]]; then
+    if SSH_AUTH_SOCK="$SOCKET" ssh-add -l &>/dev/null; then
+        log_info "Agent is working! Keys are available."
     else
-        log_warn "Socket not yet available. Service may still be starting."
+        log_warn "Socket exists but no keys found (or agent not ready)."
     fi
+else
+    log_warn "Socket not yet available. Service may still be starting."
 fi
 
 echo -e "

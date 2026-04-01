@@ -7,6 +7,7 @@ Type=simple
 ExecStart=@SCRIPT_PATH@ foreground
 Restart=on-failure
 RestartSec=5
+SuccessExitStatus=143
 StandardOutput=journal
 StandardError=journal
 
